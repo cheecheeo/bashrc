@@ -1,1 +1,1 @@
-cp ~/.bashrc ~/DOTbashrc && cp DOTbashrc ~/.bashrc
+cp ~/.bashrc ~/DOTbashrc || cp DOTbashrc ~/.bashrc
