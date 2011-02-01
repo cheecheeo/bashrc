@@ -1,0 +1,166 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+# for examples
+
+# If not running interactively, don't do anything
+[ -z "$PS1" ] && return
+
+# don't put duplicate lines in the history. See bash(1) for more options
+# ... or force ignoredups and ignorespace
+HISTCONTROL=ignoredups:ignorespace
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+
+HISTSIZE=10000
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+#case "$TERM" in
+#    xterm-color) color_prompt=yes;;
+#esac
+
+# Change the window title of X terminals
+case $TERM in
+    xterm*|rxvt|Eterm|eterm)
+        PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}\007"'
+        ;;
+    screen)
+        PROMPT_COMMAND='echo -ne "\033_${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}\033\\"'
+        ;;
+esac
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
+
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+# some more ls aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+    . /etc/bash_completion
+fi
+
+# TODO: overflowing/overwriting prompt: http://www.ibm.com/developerworks/linux/library/l-tip-prompt/
+#
+# for now I want nothing to commit but untrackd files to be green
+function parse_git_dirty {
+  local status=$(git status 2> /dev/null | tail -n1)
+  ([[ $status == "nothing to commit (working directory clean)" ]] && echo -e "\e[32m") || ([[ $status == "nothing added to commit but untracked files present (use \"git add\" to track)" ]] && echo -e "\e[33m") || echo -e "\e[31m"
+}
+function parse_git_branch {
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/$(parse_git_dirty)\1/"
+}
+function display_git_branch {
+  git rev-parse > /dev/null 2>&1 && echo -e " "$(parse_git_branch)
+}
+
+# If running interactively, then:
+if [ "$PS1" ]; then
+
+        alias aoeu='if [ $DISPLAY ]; then setxkbmap us; else loadkeys us; fi'
+        alias asdf='if [ $DISPLAY ]; then setxkbmap dvorak; else loadkeys dvorak; fi'
+        alias rm='rm -i'
+        alias mv='mv -i'
+        alias cp='cp -i'
+        # set a fancy prompt
+
+   #PS1="\u@\h:\w\$ ";
+   # https://gist.github.com/55729
+   # export PS1='\u@\h \[\033[1;33m\]\w\[\033[0m\]$(parse_git_branch)$ '
+   # PS1="\[\e[33m\](\t) \[\e[38m\]\!\[\e[0m\] \[\e[36m\]\u\[\e[31m\]@\[\e[34m\]\h\[\e[31m\]:\[\e[32m\]\w$\[\e[0m\] "
+   #PS1='\[\e[33m\](\t) \[\e[38m\]\! \[\e[36m\]\u\[\e[31m\]@\[\e[34m\]\h\[\e[31m\]:\[\e[32m\]\w $(parse_git_branch)\[\e[32m\]$\[\e[0m\] '
+   PS1='\[\e[33m\](\t) \[\e[38m\]\! \[\e[36m\]\u\[\e[31m\]@\[\e[34m\]\h\[\e[31m\]:\[\e[32m\]\w$(display_git_branch)\[\e[32m\]$\[\e[0m\] '
+
+        # If this is an xterm set the title to user@host:dir
+        #case $TERM in
+        #xterm*)
+        #       PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"'
+        #       ;;
+        #*)
+        #       ;;
+        #esac
+
+fi
+
+if [ `whoami` = "root" ]; then
+        PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/X11
+        export PATH
+fi
+
+# set PATH so it includes user's private bin if it exists
+
+if [ -d ~/bin ] ; then
+        PATH=~/bin:"${PATH}"
+        export PATH
+fi
+
+if [ -d ~/.cabal/bin ] ; then
+        PATH=~/.cabal/bin:"${PATH}"
+        export PATH
+fi
+
+if [ $DISPLAY ];
+   then #setxkbmap dvorak > /dev/null 2>&1;
+        export EDITOR='/usr/bin/gvim'
+	# xorg screensaver set to 5 mins
+	xset s blank
+	xset s 300
+   else #loadkeys dvorak > /dev/null 2>&1;
+        export EDITOR='/usr/bin/vim'
+fi
+
+alias fceu='fceu -inputcfg gamepad1'
+alias vi=$EDITOR
+SVN_EDITOR="$EDITOR --nofork"; export SVN_EDITOR
+set -o vi
+alias ocaml="ledit -x -h ~/.ocaml_history ocaml"
+
+if [ -d ~/packages/godi/bin ] ; then
+	PATH=~/packages/godi/sbin:~/packages/godi/bin:${PATH}
+	export PATH
+else
+  export PATH=/opt/godi-3.12.0/bin:/opt/godi-3.12.0/lib:$PATH
+fi
+
+if [ -d ~/trunk/peoplesearch ] ; then
+	PATH=~/trunk/lib/ocaml/atdgen:~/trunk/peoplesearch/programs:${PATH}
+	export PATH
+fi
+
+if [ -d ~/jsonpat ] ; then
+	PATH=~/jsonpat:${PATH}
+	export PATH
+fi
+
+# ocamlpath used by ocamlfind
+if [ -d ~/trunk/lib/ocaml ] ; then
+	OCAMLPATH=.:..:~/trunk/lib/ocaml
+	export OCAMLPATH
+fi
+
+if [ -d ~/lib ] ; then
+	LD_LIBRARY_PATH=~/lib
+	export LD_LIBRARY_PATH
+fi
+
+alias rgrep="grep -r"
