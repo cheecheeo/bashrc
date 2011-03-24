@@ -137,7 +137,8 @@ fi
 
 alias fceu='fceu -inputcfg gamepad1'
 alias vi=$EDITOR
-SVN_EDITOR="$EDITOR --nofork"; export SVN_EDITOR
+export SVN_EDITOR="$EDITOR -f"
+export GIT_EDITOR="$EDITOR -f"
 set -o vi
 alias ocaml="ledit -x -h ~/.ocaml_history ocaml"
 
