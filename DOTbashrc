@@ -177,5 +177,5 @@ function f {
 }
 
 function vif {
-  vim $(f $1 $2)
+  vi $(f $1 $2)
 }
