@@ -170,3 +170,12 @@ if [ -d ~/lib ] ; then
 fi
 
 alias rgrep="grep -r"
+
+# Thanks to Daniel Velkov for these two functions
+function f {
+  find . -iname "*$1*$2"
+}
+
+function vif {
+  vim $(f $1 $2)
+}
