@@ -178,5 +178,6 @@ function f {
 }
 
 function vif {
-  vi $(f $1 $2)
+  results=$(f $1 $2)
+  test $(echo $results | wc -w) -lt 3 && vi $results || echo $results | tr ' ' '\n' | vi -R -
 }
