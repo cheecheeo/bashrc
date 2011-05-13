@@ -171,6 +171,7 @@ fi
 
 alias rgrep="grep -r"
 alias view="vi -R"
+alias vimdiff="vi -d"
 
 # Thanks to Daniel Velkov for these two functions
 function f {
