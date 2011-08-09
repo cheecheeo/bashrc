@@ -143,7 +143,6 @@ alias vi=$EDITOR
 export SVN_EDITOR="$EDITOR -f"
 export GIT_EDITOR="$EDITOR -f"
 set -o vi
-alias ocaml="ledit -x -h ~/.ocaml_history ocaml"
 
 if [ -d ~/packages/godi/bin ] ; then
 	PATH=~/packages/godi/sbin:~/packages/godi/bin:${PATH}
@@ -189,4 +188,15 @@ function vif {
   else
     echo $results | tr ' ' '\n' | vi -R -
   fi
+}
+
+function ocamlpath {
+  export OCAMLPATH=$(tmp=$(for i in $(find ~ -name META -exec dirname {} \;); do dirname $i; done | sort -u) && echo $tmp | sed -e 's/ /:/g')
+}
+
+function ocaml {
+  if [ -z $OCAMLPATH ]; then
+    ocamlpath
+  fi
+  ledit -x -h ~/.ocaml_history ocaml
 }
