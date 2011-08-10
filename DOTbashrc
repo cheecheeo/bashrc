@@ -198,5 +198,5 @@ function ocaml {
   if [ -z $OCAMLPATH ]; then
     ocamlpath
   fi
-  ledit -x -h ~/.ocaml_history ocaml
+  ledit -x -h ~/.ocaml_history ocaml $@
 }
