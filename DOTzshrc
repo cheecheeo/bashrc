@@ -1,0 +1,280 @@
+# The following lines were added by compinstall
+zstyle :compinstall filename '/home/jchee/.zshrc'
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+
+if [ -d ~/bin ]; then
+        PATH=~/bin:"${PATH}"
+        export PATH
+fi
+
+if [ -d ~/.cabal/bin ]; then
+        PATH=~/.cabal/bin:"${PATH}"
+        export PATH
+fi
+
+if [ $DISPLAY ]; then
+        export BARE_EDITOR='/usr/bin/gvim'
+        # xorg screensaver set to 5 mins
+        xset s blank
+        xset s 300
+else
+        export BARE_EDITOR='/usr/bin/vim'
+fi
+export EDITOR="$BARE_EDITOR -f"
+export SVN_EDITOR=$EDITOR
+export GIT_EDITOR=$EDITOR
+
+# Finally, make sure the terminal is in application mode, when zle is
+# active. Only then are the values from $terminfo valid.
+function zle-line-init () {
+    echoti smkx
+}
+function zle-line-finish () {
+    echoti rmkx
+}
+zle -N zle-line-init
+zle -N zle-line-finish
+
+# PROMPT=%n@%m:%~%#
+
+source /usr/share/autojump/autojump.zsh
+
+source /home/jchee/packages/antigen/antigen.zsh
+
+antigen use oh-my-zsh
+antigen bundle git
+
+ISSUE=$(cat /etc/issue)
+[[ $ISSUE == Ubuntu* ]] && antigen bundle command-not-found
+plugins=(gitfast)
+
+antigen bundle zsh-users/zsh-syntax-highlighting
+
+# Tell antigen that you're done.
+antigen apply
+
+#TODO wrap those two settings together into a 'use vim bindings with ctrl-r function or something'
+bindkey -v
+bindkey '^R' history-incremental-search-backward
+
+HISTFILE=~/.histfile
+HISTSIZE=10000
+SAVEHIST=10000
+setopt EXTENDED_HISTORY
+setopt inc_append_history
+setopt share_history
+setopt hist_ignore_all_dups
+unsetopt hist_ignore_space
+
+setopt appendhistory autocd nomatch
+unsetopt correct_all
+
+alias sleepnow='gnome-screensaver-command --lock && dbus-send --system --print-reply --dest="org.freedesktop.UPower" /org/freedesktop/UPower org.freedesktop.UPower.Suspend'
+
+# http://zshwiki.org/home/zle/bindkeys
+#
+# create a zkbd compatible hash;
+# to add other keys to this hash, see: man 5 terminfo
+typeset -A key
+
+key[Home]=${terminfo[khome]}
+key[End]=${terminfo[kend]}
+key[Enter]=${terminfo[kent]}
+key[Insert]=${terminfo[kich1]}
+key[Delete]=${terminfo[kdch1]}
+key[Up]=${terminfo[kcuu1]}
+key[Down]=${terminfo[kcud1]}
+key[Left]=${terminfo[kcub1]}
+key[Right]=${terminfo[kcuf1]}
+key[PageUp]=${terminfo[kpp]}
+key[PageDown]=${terminfo[knp]}
+
+# setup key accordingly
+[[ -n "${key[Home]}"    ]]  && bindkey  "${key[Home]}"    beginning-of-line
+[[ -n "${key[End]}"     ]]  && bindkey  "${key[End]}"     end-of-line
+[[ -n "${key[Enter]}"   ]]  && bindkey  "${key[Enter]}"   accept-line
+[[ -n "${key[Insert]}"  ]]  && bindkey  "${key[Insert]}"  overwrite-mode
+[[ -n "${key[Delete]}"  ]]  && bindkey  "${key[Delete]}"  delete-char
+[[ -n "${key[Up]}"      ]]  && bindkey  "${key[Up]}"      up-line-or-history
+[[ -n "${key[Down]}"    ]]  && bindkey  "${key[Down]}"    down-line-or-history
+[[ -n "${key[Left]}"    ]]  && bindkey  "${key[Left]}"    backward-char
+[[ -n "${key[Right]}"   ]]  && bindkey  "${key[Right]}"   forward-char
+
+# http://stackoverflow.com/questions/890620/unable-to-have-bash-like-c-x-e-in-zsh/903973#903973
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey -M vicmd v edit-command-line
+
+###############################################################################
+# Right justified prompt hack                                                 #
+# http://aperiodic.net/phil/prompt/                                           #
+###############################################################################
+
+function precmd {
+
+    local TERMWIDTH
+    (( TERMWIDTH = ${COLUMNS} - 1 ))
+
+
+    ###
+    # Truncate the path if it's too long.
+
+    PR_FILLBAR=""
+    PR_PWDLEN=""
+
+    local promptsize=${#${(%):---(%n@%m:%l)---()--}}
+    local pwdsize=${#${(%):-%~}}
+
+    if [[ "$promptsize + $pwdsize" -gt $TERMWIDTH ]]; then
+	    ((PR_PWDLEN=$TERMWIDTH - $promptsize))
+    else
+	PR_FILLBAR="\${(l.(($TERMWIDTH - ($promptsize + $pwdsize)))..${PR_HBAR}.)}"
+    fi
+}
+
+
+setprompt () {
+    ###
+    # Need this so the prompt will work.
+
+    setopt prompt_subst
+
+
+    ###
+    # See if we can use colors.
+
+    autoload colors zsh/terminfo
+    if [[ "$terminfo[colors]" -ge 8 ]]; then
+	colors
+    fi
+    for color in RED GREEN YELLOW BLUE MAGENTA CYAN WHITE; do
+	eval PR_$color='%{$terminfo[bold]$fg[${(L)color}]%}'
+	eval PR_LIGHT_$color='%{$fg[${(L)color}]%}'
+	(( count = $count + 1 ))
+    done
+    PR_NO_COLOUR="%{$terminfo[sgr0]%}"
+
+
+    ###
+    # See if we can use extended characters to look nicer.
+
+    typeset -A altchar
+    set -A altchar ${(s..)terminfo[acsc]}
+    PR_SET_CHARSET="%{$terminfo[enacs]%}"
+    PR_SHIFT_IN="%{$terminfo[smacs]%}"
+    PR_SHIFT_OUT="%{$terminfo[rmacs]%}"
+    PR_HBAR=${altchar[q]:--}
+    PR_ULCORNER=${altchar[l]:--}
+    PR_LLCORNER=${altchar[m]:--}
+    PR_URCORNER=${altchar[k]:--}
+
+
+    ###
+    # Decide if we need to set titlebar text.
+
+    case $TERM in
+	xterm*)
+	    PR_TITLEBAR=$'%{\e]0;%(!.-=*[ROOT]*=- | .)%n@%m:%~ | ${COLUMNS}x${LINES} | %y\a%}'
+	    ;;
+	screen)
+	    PR_TITLEBAR=$'%{\e_screen \005 (\005t) | %(!.-=[ROOT]=- | .)%n@%m:%~ | ${COLUMNS}x${LINES} | %y\e\\%}'
+	    ;;
+	*)
+	    PR_TITLEBAR=''
+	    ;;
+    esac
+
+
+    ###
+    # Decide whether to set a screen title
+    if [[ "$TERM" == "screen" ]]; then
+	PR_STITLE=$'%{\ekzsh\e\\%}'
+    else
+	PR_STITLE=''
+    fi
+
+
+    ###
+    # Finally, the prompt.
+
+    PROMPT='$PR_SET_CHARSET$PR_STITLE${(e)PR_TITLEBAR}\
+$PR_CYAN$PR_SHIFT_IN$PR_ULCORNER$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
+$PR_GREEN%(!.%SROOT%s.%n)$PR_GREEN@%m :%l\
+$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_CYAN$PR_HBAR${(e)PR_FILLBAR}$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
+$PR_MAGENTA%$PR_PWDLEN<...<%~%<<\
+$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_CYAN$PR_URCORNER$PR_SHIFT_OUT\
+
+%# '
+}
+
+# ------------------------------------------------------------------------------
+#          FILE:  kphoen.zsh-theme
+#   DESCRIPTION:  oh-my-zsh theme file.
+#        AUTHOR:  Kévin Gomez (geek63@gmail.com)
+#       VERSION:  1.0.0
+#    SCREENSHOT:
+# ------------------------------------------------------------------------------
+
+GIT_PROMPT_ADDED_CHAR="✚"
+GIT_PROMPT_MODIFIED_CHAR="±"
+GIT_PROMPT_DELETED_CHAR="✖"
+GIT_PROMPT_RENAMED_CHAR="➜"
+GIT_PROMPT_UNMERGED_CHAR="≠"
+GIT_PROMPT_UNTRACKED_CHAR=" ⃠"
+
+if [[ "$TERM" != "dumb" ]] && [[ "$DISABLE_LS_COLORS" != "true" ]]; then
+    PROMPT='[%{$fg[red]%}%n%{$reset_color%}@%{$fg[magenta]%}%m%{$reset_color%}:%{$fg[blue]%}%~%{$reset_color%}$(git_prompt_info)]
+%# '
+
+    ZSH_THEME_GIT_PROMPT_PREFIX=" on %{$fg[green]%}"
+    ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}"
+    ZSH_THEME_GIT_PROMPT_DIRTY=""
+    ZSH_THEME_GIT_PROMPT_CLEAN=""
+
+    # display exitcode on the right when >0
+    return_code="%(?..%{$fg[red]%}%? ‽‽‽%{$reset_color%})"
+
+    RPROMPT='${return_code}$(git_prompt_status)%{$reset_color%}'
+
+    ZSH_THEME_GIT_PROMPT_ADDED="%{$fg[green]%} $GIT_PROMPT_ADDED_CHAR"
+    ZSH_THEME_GIT_PROMPT_MODIFIED="%{$fg[blue]%} $GIT_PROMPT_MODIFIED_CHAR"
+    ZSH_THEME_GIT_PROMPT_DELETED="%{$fg[red]%} $GIT_PROMPT_DELETED_CHAR"
+    ZSH_THEME_GIT_PROMPT_RENAMED="%{$fg[magenta]%} $GIT_PROMPT_RENAMED_CHAR"
+    ZSH_THEME_GIT_PROMPT_UNMERGED="%{$fg[yellow]%} $GIT_PROMPT_UNMERGED_CHAR"
+    ZSH_THEME_GIT_PROMPT_UNTRACKED="%{$fg[cyan]%} $GIT_PROMPT_UNTRACKED_CHAR"
+else
+    PROMPT='[%n@%m:%~$(git_prompt_info)]
+%# '
+
+    ZSH_THEME_GIT_PROMPT_PREFIX=" on"
+    ZSH_THEME_GIT_PROMPT_SUFFIX=""
+    ZSH_THEME_GIT_PROMPT_DIRTY=""
+    ZSH_THEME_GIT_PROMPT_CLEAN=""
+
+    # display exitcode on the right when >0
+    return_code="%(?..%? ↵)"
+
+    RPROMPT='${return_code}$(git_prompt_status)'
+
+    ZSH_THEME_GIT_PROMPT_ADDED=" $GIT_PROMPT_ADDED_CHAR"
+    ZSH_THEME_GIT_PROMPT_MODIFIED=" $GIT_PROMPT_MODIFIED_CHAR"
+    ZSH_THEME_GIT_PROMPT_DELETED=" $GIT_PROMPT_DELETED_CHAR"
+    ZSH_THEME_GIT_PROMPT_RENAMED=" $GIT_PROMPT_RENAMED_CHAR"
+    ZSH_THEME_GIT_PROMPT_UNMERGED=" $GIT_PROMPT_UNMERGED_CHAR"
+    ZSH_THEME_GIT_PROMPT_UNTRACKED=" $GIT_PROMPT_UNTRACKED_CHAR"
+fi
+
+#setprompt
+
+alias vi=$BARE_EDITOR
+alias rgrep="grep -r"
+alias view="vi -R"
+alias vimdiff="vi -d"
+alias l='ls -CF'
+alias ll='ls -alF'
+alias xclip='xclip -selection c'
+alias less='less -F -X'
+alias catn='tail -n +1'
