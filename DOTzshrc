@@ -206,3 +206,6 @@ alias catn='tail -n +1'
 
 # if I'm running a display and my display is xterm use a better TERM
 [ -n "$DISPLAY" -a "$TERM" = "xterm" ] && export TERM=xterm-256color
+
+# for tmux: export 256color
+[ -n "$TMUX" ] && export TERM=screen-256color
