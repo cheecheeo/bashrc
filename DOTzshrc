@@ -151,8 +151,8 @@ GIT_PROMPT_UNMERGED_CHAR="≠"
 GIT_PROMPT_UNTRACKED_CHAR=" ⃠"
 
 if [[ "$TERM" != "dumb" ]] && [[ "$DISABLE_LS_COLORS" != "true" ]]; then
-    PROMPT='[%{$fg[red]%}%n%{$reset_color%}@%{$fg[magenta]%}%m%{$reset_color%}:%{$fg[blue]%}%~%{$reset_color%}$(git_prompt_info)]
-%# '
+    #PROMPT='[%{$fg[red]%}%n%{$reset_color%}@%{$fg[magenta]%}%m%{$reset_color%}:%{$fg[blue]%}%~%{$reset_color%}$(git_prompt_info)]
+#%# '
 
     ZSH_THEME_GIT_PROMPT_PREFIX=" on %{$fg[green]%}"
     ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}"
@@ -162,7 +162,10 @@ if [[ "$TERM" != "dumb" ]] && [[ "$DISABLE_LS_COLORS" != "true" ]]; then
     # display exitcode on the right when >0
     return_code="%(?..%{$fg[red]%}%? ‽‽‽%{$reset_color%})"
 
-    RPROMPT='${return_code}$(git_prompt_status)%{$reset_color%}'
+    PROMPT='[%{$fg[red]%}%n%{$reset_color%}@%{$fg[magenta]%}%m%{$reset_color%}:%{$fg[blue]%}%~%{$reset_color%}$(git_prompt_info)]${return_code}$(git_prompt_status)%{$reset_color%}
+%# '
+
+    #RPROMPT='${return_code}$(git_prompt_status)%{$reset_color%}'
 
     ZSH_THEME_GIT_PROMPT_ADDED="%{$fg[green]%} $GIT_PROMPT_ADDED_CHAR"
     ZSH_THEME_GIT_PROMPT_MODIFIED="%{$fg[blue]%} $GIT_PROMPT_MODIFIED_CHAR"
@@ -171,7 +174,7 @@ if [[ "$TERM" != "dumb" ]] && [[ "$DISABLE_LS_COLORS" != "true" ]]; then
     ZSH_THEME_GIT_PROMPT_UNMERGED="%{$fg[yellow]%} $GIT_PROMPT_UNMERGED_CHAR"
     ZSH_THEME_GIT_PROMPT_UNTRACKED="%{$fg[cyan]%} $GIT_PROMPT_UNTRACKED_CHAR"
 else
-    PROMPT='[%n@%m:%~$(git_prompt_info)]
+    PROMPT='[%n@%m:%~$(git_prompt_info)]${return_code}$(git_prompt_status)
 %# '
 
     ZSH_THEME_GIT_PROMPT_PREFIX=" on"
@@ -182,7 +185,7 @@ else
     # display exitcode on the right when >0
     return_code="%(?..%? ↵)"
 
-    RPROMPT='${return_code}$(git_prompt_status)'
+    #RPROMPT='${return_code}$(git_prompt_status)'
 
     ZSH_THEME_GIT_PROMPT_ADDED=" $GIT_PROMPT_ADDED_CHAR"
     ZSH_THEME_GIT_PROMPT_MODIFIED=" $GIT_PROMPT_MODIFIED_CHAR"
