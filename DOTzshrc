@@ -15,6 +15,11 @@ if [ -d ~/.cabal/bin ]; then
         export PATH
 fi
 
+if [ -d $HOME/.local/bin ]; then
+        PATH=$HOME/.local/bin:"${PATH}"
+        export PATH
+fi
+
 if [ $DISPLAY ]; then
         export BARE_EDITOR='/usr/bin/gvim'
         # xorg screensaver set to 5 mins
